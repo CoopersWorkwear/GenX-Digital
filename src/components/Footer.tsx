@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NewsletterForm } from "@/components/NewsletterForm";
+import { companyInfo } from "@/lib/company";
 
 const COLUMNS = [
   {
@@ -31,6 +32,7 @@ const COLUMNS = [
 ];
 
 export function Footer() {
+  const company = companyInfo();
   return (
     <footer className="border-t border-slate-100">
       <div className="bg-gradient-to-br from-brand-600 to-violet-600 text-white">
@@ -76,8 +78,8 @@ export function Footer() {
           ))}
         </div>
         <div className="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-400">
-          © {new Date().getFullYear()} GenX Digital · genxdigital.com.au · All
-          prices in AUD
+          © {new Date().getFullYear()} {company.tradingName} · {company.website} · All
+          prices in AUD{company.abn ? ` · ABN ${company.abn}` : ""}
         </div>
         </div>
       </div>

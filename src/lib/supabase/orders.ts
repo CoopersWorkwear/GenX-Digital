@@ -5,7 +5,10 @@ export interface OrderRow {
   id: string;
   email: string;
   status: string;
+  subtotal?: number;
+  tax?: number;
   total: number;
+  payment_ref?: string | null;
   created_at: string;
 }
 
@@ -55,6 +58,39 @@ export async function getOrdersByEmail(email: string): Promise<OrderWithItems[]>
     ...o,
     items: items.filter((it) => it.order_id === o.id),
   }));
+}
+
+/**
+ * Fetch a single order (with items) by id, scoped to the owner's email so a
+ * customer can only ever load their own invoice. Returns null otherwise.
+ */
+export async function getOrderByIdForEmail(
+  orderId: string,
+  email: string,
+): Promise<OrderWithItems | null> {
+  const config = getSupabaseAdminConfig();
+  if (!config) return null;
+
+  const headers = {
+    apikey: config.serviceRoleKey,
+    Authorization: `Bearer ${config.serviceRoleKey}`,
+  };
+
+  const orderRes = await fetch(
+    `${config.url}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&email=eq.${encodeURIComponent(email)}`,
+    { headers, cache: "no-store" },
+  );
+  if (!orderRes.ok) return null;
+  const orders = (await orderRes.json()) as OrderRow[];
+  const order = orders[0];
+  if (!order) return null;
+
+  const itemsRes = await fetch(
+    `${config.url}/rest/v1/order_items?order_id=eq.${encodeURIComponent(order.id)}`,
+    { headers, cache: "no-store" },
+  );
+  const items = itemsRes.ok ? ((await itemsRes.json()) as OrderItemRow[]) : [];
+  return { ...order, items };
 }
 
 /** Fetch the most recent orders across all customers (admin view). */
