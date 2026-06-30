@@ -10,16 +10,36 @@ export interface SiteService {
   description: string;
 }
 
-/** AI-generated website copy, rendered into the preview template. */
+export interface SiteStat {
+  value: string;
+  label: string;
+}
+
+export interface SiteTestimonial {
+  quote: string;
+  name: string;
+  role: string;
+}
+
+export interface SiteFaqItem {
+  question: string;
+  answer: string;
+}
+
+/** AI-generated website content, rendered into the preview template. */
 export interface SiteContent {
+  tagline: string;
   heroHeadline: string;
   heroSubheadline: string;
+  ctaText: string;
   aboutTitle: string;
   aboutBody: string;
   services: SiteService[];
   whyTitle: string;
-  whyPoints: string[];
-  ctaText: string;
+  features: string[];
+  stats: SiteStat[];
+  testimonials: SiteTestimonial[];
+  faqs: SiteFaqItem[];
 }
 
 export interface BuilderBrief {
