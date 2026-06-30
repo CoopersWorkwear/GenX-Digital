@@ -39,16 +39,28 @@ into a Client Component.
 src/
   app/
     page.tsx                       Landing page + domain search
-    layout.tsx                     Root layout
-    api/domains/availability/      Domain availability + pricing endpoint
+    layout.tsx                     Root layout (cart provider, header, footer)
+    domains/                       Domain search + live TLD pricing table
+    hosting/ ssl/ email/           Product catalogue pages
+    website-builder/               AI website builder intake
+    cart/ checkout/                Cart + checkout (order request)
+    about/ contact/ support/       Company pages
+    terms/ privacy/                Legal placeholders
+    api/
+      domains/availability/        Domain availability + pricing
+      products/[category]/         Hosting / SSL / email plans
+      orders/                      Order request (persists to Supabase when set)
+      website-builder/             Queue an AI build request
+      contact/                     Contact enquiry
+      debug/products/              TEMP: probe product endpoints (sandbox only)
   components/
-    DomainSearch.tsx               Client-side search box + results
+    Header.tsx Footer.tsx          Shared chrome (cart count in header)
+    DomainSearch.tsx               Search box + add-to-cart
+    ProductCatalogue.tsx           Plan grid + add-to-cart
   lib/
-    dreamscape/
-      config.ts                    Resolves env, sandbox vs production
-      client.ts                    Signed request layer (server-only)
-      domains.ts                   Domain availability + TLD pricing
-      types.ts                     Response shapes
+    dreamscape/                    Signed client, domains, products, types
+    cart/CartContext.tsx           Client-side cart (localStorage)
+    supabase/config.ts             Supabase admin config (gated)
     pricing.ts                     Cost price -> retail price (markup)
     validation.ts                  Input validation + TLD expansion
 supabase/
@@ -77,15 +89,17 @@ supabase/
 
 ## Roadmap
 
-1. **Foundation** *(this phase)* — Next.js app, secure Dreamscape client, domain
-   search against sandbox, Supabase schema.
-2. **Domain search & pricing** — full availability + retail pricing, cart.
-3. **Hosting & SSL & email catalogue** — product plans and pages.
-4. **Accounts + checkout** — Supabase auth, cart, Stripe checkout.
-5. **Provisioning + orders** — place orders via Dreamscape on payment, customer
-   dashboard.
-6. **AI website builder** — domain → generated site → emailed link.
-7. **Go-live** — production keys, connect genxdigital.com.au.
+1. ✅ **Foundation** — Next.js app, secure Dreamscape client, Supabase schema.
+2. ✅ **Domain search & pricing** — live availability + retail pricing + cart.
+3. 🟡 **Hosting / SSL / email catalogue** — pages + cart built; product API
+   endpoints still need confirming against the sandbox (see `api/debug/products`).
+4. 🟡 **Cart + checkout** — built as an order request; needs a payment provider
+   (Stripe/PayPal) and a connected Supabase project to persist + provision.
+5. ⬜ **Accounts + provisioning** — Supabase auth, place orders via Dreamscape on
+   payment, customer dashboard.
+6. 🟡 **AI website builder** — intake flow built; generation (Lovable) + the
+   notification email are pending those connectors being authorised.
+7. ⬜ **Go-live** — production keys, connect genxdigital.com.au.
 
 > **Sandbox vs production:** everything defaults to the Dreamscape sandbox. Going
 > live is a deliberate switch of `DREAMSCAPE_ENV` to `production` with the
