@@ -11,17 +11,35 @@ export const dynamic = "force-dynamic";
  * Disabled in production. Remove once the product catalogue is wired.
  */
 const CANDIDATES = [
-  "/products",
-  "/products/hosting",
-  "/products/hosting/plans",
-  "/products/web-hosting",
-  "/products/ssl",
-  "/products/ssl/plans",
-  "/products/email",
-  "/products/email/plans",
-  "/product-plans",
-  "/hosting/plans",
-  "/ssl/plans",
+  // hosting variants
+  "/web-hosting",
+  "/web-hosting/plans",
+  "/web-hosting/products",
+  "/webhosting",
+  "/web_hosting",
+  "/hosting",
+  "/hosting/products",
+  "/whm-hosting",
+  // ssl variants
+  "/ssl",
+  "/ssl/products",
+  "/ssl-certificates",
+  "/ssl-certificate",
+  "/ssl_certificate",
+  "/ssl-certificates/plans",
+  // email variants
+  "/email",
+  "/email-hosting",
+  "/email_hosting",
+  "/email-hosting/plans",
+  // generic product/plan listings
+  "/products/plans",
+  "/product/plans",
+  "/plans",
+  "/product_plans",
+  "/services",
+  "/services/plans",
+  "/handbooks/products",
 ];
 
 async function probe(path: string) {
