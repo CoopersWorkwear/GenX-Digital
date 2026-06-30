@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getStripe } from "@/lib/stripe/server";
 import { getOrCreateStripeCustomer } from "@/lib/stripe/customer";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { verifyCartTotal } from "@/lib/pricing/verify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +47,8 @@ export async function POST(request: Request) {
   }
 
   const { email, items } = parsed.data;
-  const total = items.reduce((sum, i) => sum + i.price, 0);
+  // Re-derive the total server-side so it can't be tampered with client-side.
+  const total = await verifyCartTotal(items);
   const amount = Math.round(total * 100); // AUD cents
   if (amount <= 0 || amount > 5_000_000) {
     return NextResponse.json({ error: "Invalid amount." }, { status: 400 });

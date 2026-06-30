@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/auth/admin";
 import { getOrdersByEmail } from "@/lib/supabase/orders";
 import { SavedCards } from "@/components/SavedCards";
 import { formatAud } from "@/lib/pricing";
@@ -24,11 +26,21 @@ export default async function AccountPage() {
           <h1 className="text-3xl font-bold tracking-tight">My account</h1>
           <p className="mt-1 text-slate-600">Welcome back, {name}.</p>
         </div>
-        <form action="/auth/signout" method="post">
-          <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-brand-300 hover:text-brand-600">
-            Sign out
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          {isAdminEmail(email) && (
+            <Link
+              href="/admin"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-brand-300 hover:text-brand-600"
+            >
+              Admin
+            </Link>
+          )}
+          <form action="/auth/signout" method="post">
+            <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-brand-300 hover:text-brand-600">
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* Profile */}
