@@ -25,9 +25,8 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-slate-100">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <span className="text-xl font-bold tracking-tight">
-            GenX<span className="text-brand-600">Digital</span>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="GenX Digital" className="h-8 w-auto" />
           <nav className="hidden gap-6 text-sm font-medium text-slate-600 sm:flex">
             <a href="#domains" className="hover:text-brand-600">Domains</a>
             <a href="#products" className="hover:text-brand-600">Hosting</a>

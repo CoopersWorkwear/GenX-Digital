@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #eef5ff;
-  --color-brand-100: #d9e8ff;
-  --color-brand-500: #2563eb;
-  --color-brand-600: #1d4ed8;
-  --color-brand-700: #1e40af;
-  --color-ink: #0b1220;
+  /* Brand magenta — sampled from the GenX Digital logo. */
+  --color-brand-50: #fdf2f8;
+  --color-brand-100: #fce7f3;
+  --color-brand-500: #ec008c;
+  --color-brand-600: #cf007b;
+  --color-brand-700: #a30062;
+  --color-ink: #15172b;
 }
 
 :root {
