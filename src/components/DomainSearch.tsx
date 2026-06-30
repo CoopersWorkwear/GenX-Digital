@@ -89,7 +89,11 @@ export function DomainSearch() {
       )}
 
       {results && results.length > 0 && (
-        <ul className="mt-6 divide-y divide-slate-100 rounded-xl border border-slate-200 text-left">
+        <p className="mt-4 text-xs text-slate-400">All prices in AUD, include GST.</p>
+      )}
+
+      {results && results.length > 0 && (
+        <ul className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200 text-left">
           {results.map((r) => {
             const id = `domain:${r.domainName}`;
             const inCart = has(id);

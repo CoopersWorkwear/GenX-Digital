@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart/CartContext";
-import { formatAud } from "@/lib/pricing";
+import { formatAud, gstComponent } from "@/lib/pricing";
 
 /**
  * Checkout — collects contact details and the order. Payment capture (Stripe)
@@ -110,6 +110,9 @@ export default function CheckoutPage() {
               <span>Total</span>
               <span>{formatAud(total)}</span>
             </div>
+            <p className="mt-1 text-xs text-slate-400">
+              Includes GST {formatAud(gstComponent(total))}
+            </p>
           </aside>
         </div>
       )}

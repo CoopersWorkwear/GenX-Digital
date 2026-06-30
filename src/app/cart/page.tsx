@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart/CartContext";
-import { formatAud } from "@/lib/pricing";
+import { formatAud, gstComponent } from "@/lib/pricing";
 
 export default function CartPage() {
   const { items, total, remove } = useCart();
@@ -49,12 +49,12 @@ export default function CartPage() {
 
           <aside className="h-fit rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold">Summary</h2>
-            <div className="mt-4 flex justify-between text-sm text-slate-600">
-              <span>Subtotal</span>
+            <div className="mt-4 flex justify-between font-semibold">
+              <span>Total</span>
               <span>{formatAud(total)}</span>
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              GST calculated at checkout.
+              Includes GST {formatAud(gstComponent(total))}
             </p>
             <Link
               href="/checkout"

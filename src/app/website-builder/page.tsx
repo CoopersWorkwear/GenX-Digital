@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { encodeBrief } from "@/lib/builder/encode";
 
 /**
  * AI Website Builder intake. The customer enters their domain and a few
@@ -11,7 +13,7 @@ import { useState } from "react";
  */
 export default function WebsiteBuilderPage() {
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -19,19 +21,20 @@ export default function WebsiteBuilderPage() {
     setSubmitting(true);
     setError(null);
     const form = new FormData(e.currentTarget);
+    const brief = {
+      domain: String(form.get("domain") ?? ""),
+      businessName: String(form.get("businessName") ?? ""),
+      description: String(form.get("description") ?? ""),
+    };
     try {
       const res = await fetch("/api/website-builder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          domain: form.get("domain"),
-          email: form.get("email"),
-          businessName: form.get("businessName"),
-          description: form.get("description"),
-        }),
+        body: JSON.stringify({ ...brief, email: form.get("email") }),
       });
       if (!res.ok) throw new Error();
-      setDone(true);
+      // Generate the instant preview link (simple template).
+      setPreviewUrl(`/preview?d=${encodeURIComponent(encodeBrief(brief))}`);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -52,15 +55,22 @@ export default function WebsiteBuilderPage() {
         website. We&apos;ll email you a link to preview it.
       </p>
 
-      {done ? (
+      {previewUrl ? (
         <div className="mt-10 rounded-2xl border border-brand-100 bg-brand-50 p-8">
           <h2 className="text-xl font-semibold text-brand-700">
-            You&apos;re in the queue! 🎉
+            Your website is ready to preview! 🎉
           </h2>
           <p className="mt-2 text-slate-700">
-            We&apos;ve got your details. As soon as your site is built, we&apos;ll
-            email you a link to preview it.
+            We&apos;ve built you a starter site from your details. Open the
+            preview below — we&apos;ll also email you the link.
           </p>
+          <Link
+            href={previewUrl}
+            target="_blank"
+            className="mt-6 inline-block rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700"
+          >
+            Open my website preview →
+          </Link>
         </div>
       ) : (
         <form onSubmit={onSubmit} className="mt-10 space-y-5">
