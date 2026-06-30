@@ -1,10 +1,9 @@
 /**
- * Retail pricing = Dreamscape cost price + your margin, shown GST-inclusive.
+ * Retail pricing = Dreamscape cost price + your margin.
  *
- * Assumption: Dreamscape wholesale prices are GST-exclusive, so the customer
- * price is  cost × (1 + markup) × (1 + GST).  If wholesale turns out to be
- * GST-inclusive already, set GST_RATE handling accordingly — it's centralised
- * here so there's a single place to change it.
+ * Dreamscape wholesale prices are GST-INCLUSIVE, so applying the margin keeps
+ * the result GST-inclusive — no extra GST is added. `gstComponent()` breaks out
+ * the GST portion already contained in a price (for invoices / the cart).
  *
  * Phase 1 uses a single default markup from DEFAULT_MARKUP_PERCENT. Later
  * phases can read per-TLD / per-product overrides; the call sites stay the same.
@@ -24,27 +23,15 @@ function roundPrice(value: number): number {
 }
 
 /**
- * Ex-GST retail price (wholesale cost + margin). Returns undefined if the cost
- * is unknown so the UI can render "—" rather than a misleading $0.00.
- */
-export function retailPriceExGst(
-  costPrice: number | undefined,
-  markupPercent: number = defaultMarkupPercent(),
-): number | undefined {
-  if (costPrice === undefined || !Number.isFinite(costPrice)) return undefined;
-  return roundPrice(costPrice * (1 + markupPercent / 100));
-}
-
-/**
- * GST-inclusive retail price — this is the number shown to customers.
+ * GST-inclusive retail price (wholesale cost + margin). Returns undefined if
+ * the cost is unknown so the UI can render "—" rather than a misleading $0.00.
  */
 export function retailPrice(
   costPrice: number | undefined,
   markupPercent: number = defaultMarkupPercent(),
 ): number | undefined {
-  const ex = retailPriceExGst(costPrice, markupPercent);
-  if (ex === undefined) return undefined;
-  return roundPrice(ex * (1 + GST_RATE));
+  if (costPrice === undefined || !Number.isFinite(costPrice)) return undefined;
+  return roundPrice(costPrice * (1 + markupPercent / 100));
 }
 
 /** The GST component contained within a GST-inclusive amount. */
