@@ -4,99 +4,122 @@ import { z } from "zod";
 import type { BuilderBrief, SiteContent } from "@/lib/builder/types";
 
 /**
- * Generate tailored website copy for a customer's business using the Claude API.
- *
- * Uses structured outputs (a JSON schema) so the response matches our template's
- * shape, then validates it. Pay-as-you-go (no per-site credits); gated on
- * ANTHROPIC_API_KEY so the builder degrades gracefully to a heuristic template
- * when it isn't configured.
+ * Generate a full set of tailored website content for a customer's business
+ * using the Claude API, validated against our template's shape. Pay-as-you-go;
+ * gated on ANTHROPIC_API_KEY with graceful fallback.
  */
 
 export function isSiteGenConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
-// Zod schema validates the model's output before we trust it.
 const SiteContentSchema = z.object({
-  heroHeadline: z.string().min(1),
-  heroSubheadline: z.string().min(1),
-  aboutTitle: z.string().min(1),
-  aboutBody: z.string().min(1),
+  tagline: z.string(),
+  heroHeadline: z.string(),
+  heroSubheadline: z.string(),
+  ctaText: z.string(),
+  aboutTitle: z.string(),
+  aboutBody: z.string(),
   services: z.array(z.object({ title: z.string(), description: z.string() })),
-  whyTitle: z.string().min(1),
-  whyPoints: z.array(z.string()),
-  ctaText: z.string().min(1),
+  whyTitle: z.string(),
+  features: z.array(z.string()),
+  stats: z.array(z.object({ value: z.string(), label: z.string() })),
+  testimonials: z.array(
+    z.object({ quote: z.string(), name: z.string(), role: z.string() }),
+  ),
+  faqs: z.array(z.object({ question: z.string(), answer: z.string() })),
 });
 
-// JSON Schema constrains the model's response format (structured outputs).
-const SITE_JSON_SCHEMA = {
+const strArr = (items: object) => ({ type: "array", items });
+const obj = (properties: Record<string, unknown>, required: string[]) => ({
   type: "object",
   additionalProperties: false,
-  properties: {
+  properties,
+  required,
+});
+
+const SITE_JSON_SCHEMA = obj(
+  {
+    tagline: { type: "string" },
     heroHeadline: { type: "string" },
     heroSubheadline: { type: "string" },
+    ctaText: { type: "string" },
     aboutTitle: { type: "string" },
     aboutBody: { type: "string" },
-    services: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: { title: { type: "string" }, description: { type: "string" } },
-        required: ["title", "description"],
-      },
-    },
+    services: strArr(
+      obj({ title: { type: "string" }, description: { type: "string" } }, ["title", "description"]),
+    ),
     whyTitle: { type: "string" },
-    whyPoints: { type: "array", items: { type: "string" } },
-    ctaText: { type: "string" },
+    features: strArr({ type: "string" }),
+    stats: strArr(
+      obj({ value: { type: "string" }, label: { type: "string" } }, ["value", "label"]),
+    ),
+    testimonials: strArr(
+      obj(
+        { quote: { type: "string" }, name: { type: "string" }, role: { type: "string" } },
+        ["quote", "name", "role"],
+      ),
+    ),
+    faqs: strArr(
+      obj({ question: { type: "string" }, answer: { type: "string" } }, ["question", "answer"]),
+    ),
   },
-  required: [
+  [
+    "tagline",
     "heroHeadline",
     "heroSubheadline",
+    "ctaText",
     "aboutTitle",
     "aboutBody",
     "services",
     "whyTitle",
-    "whyPoints",
-    "ctaText",
+    "features",
+    "stats",
+    "testimonials",
+    "faqs",
   ],
-} as const;
+);
 
 export async function generateSiteContent(
   brief: BuilderBrief,
 ): Promise<SiteContent | null> {
   if (!isSiteGenConfigured()) return null;
 
-  const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
+  const client = new Anthropic();
 
   try {
     const message = await client.messages.create({
       model: "claude-opus-4-8",
-      max_tokens: 4096,
-      // Effort low keeps latency low for an interactive request; the prompt
-      // carries the quality.
+      max_tokens: 6000,
       output_config: {
         format: { type: "json_schema", schema: SITE_JSON_SCHEMA },
-        effort: "low",
+        effort: "medium",
       },
       system:
-        "You are an expert Australian web copywriter. Write warm, concrete, " +
-        "benefit-led copy for a small-business website in Australian English. " +
-        "No clichés, no lorem ipsum, no emoji. Keep every field tight and specific " +
-        "to the business described.",
+        "You are an award-winning web copywriter and brand strategist for Australian " +
+        "small businesses. Write specific, vivid, benefit-led copy in Australian " +
+        "English — never generic filler, clichés, lorem ipsum or emoji. Make every " +
+        "line feel written for THIS business.",
       messages: [
         {
           role: "user",
           content:
-            `Write website copy for this business.\n\n` +
-            `Business name: ${brief.businessName}\n` +
-            `Domain: ${brief.domain ?? "(none yet)"}\n` +
+            `Create complete website content for this business.\n\n` +
+            `Business: ${brief.businessName}\n` +
+            `Domain: ${brief.domain ?? "(not chosen yet)"}\n` +
             `What they do: ${brief.description}\n\n` +
-            `Produce: a punchy hero headline (max ~8 words); a one-sentence ` +
-            `subheadline; an About title and a 2-3 sentence body; exactly 3 ` +
-            `services (each a short title + one-sentence description); a ` +
-            `"why choose us" title with 3 short points; and a call-to-action ` +
-            `button label.`,
+            `Produce:\n` +
+            `- tagline: a short brand line (≤6 words)\n` +
+            `- heroHeadline: bold, benefit-driven (≤9 words)\n` +
+            `- heroSubheadline: one compelling sentence\n` +
+            `- ctaText: a button label (≤3 words)\n` +
+            `- aboutTitle + aboutBody: a warm 2-3 sentence about section\n` +
+            `- services: 4-6 services, each a specific title + one-sentence benefit\n` +
+            `- whyTitle + features: a "why choose us" title and 4 short, concrete points\n` +
+            `- stats: 3 credible-looking stats (value + label), e.g. years, clients, rating\n` +
+            `- testimonials: 3 realistic short customer quotes with first name + suburb/role\n` +
+            `- faqs: 4 relevant question/answer pairs\n` +
+            `Tailor everything to the business described.`,
         },
       ],
     });

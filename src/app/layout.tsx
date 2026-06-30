@@ -3,9 +3,7 @@ import "./globals.css";
 import { CartProvider } from "@/lib/cart/CartContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { ScrollProgress } from "@/components/ux/ScrollProgress";
-import { BackToTop } from "@/components/ux/BackToTop";
-import { CookieConsent } from "@/components/ux/CookieConsent";
+import { SiteShell } from "@/components/SiteShell";
 
 export const metadata: Metadata = {
   title: {
@@ -25,12 +23,9 @@ export default function RootLayout({
     <html lang="en-AU">
       <body className="flex min-h-screen flex-col antialiased">
         <CartProvider>
-          <ScrollProgress />
-          <Header />
-          <div className="flex-1">{children}</div>
-          <Footer />
-          <BackToTop />
-          <CookieConsent />
+          <SiteShell header={<Header />} footer={<Footer />}>
+            {children}
+          </SiteShell>
         </CartProvider>
       </body>
     </html>
