@@ -6,6 +6,7 @@ interface DomainResult {
   domainName: string;
   available: boolean;
   priceFormatted: string;
+  renewPriceFormatted?: string;
 }
 
 interface ApiResponse {
@@ -94,8 +95,16 @@ export function DomainSearch() {
               <span className="flex items-center gap-3">
                 {r.available ? (
                   <>
-                    <span className="text-sm text-slate-600">
-                      {r.priceFormatted}
+                    <span className="text-right">
+                      <span className="block text-sm font-semibold text-slate-800">
+                        {r.priceFormatted}
+                        <span className="font-normal text-slate-500">/yr</span>
+                      </span>
+                      {r.renewPriceFormatted && (
+                        <span className="block text-xs text-slate-400">
+                          renews {r.renewPriceFormatted}/yr
+                        </span>
+                      )}
                     </span>
                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                       Available

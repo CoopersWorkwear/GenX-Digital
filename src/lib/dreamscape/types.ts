@@ -12,6 +12,8 @@ export interface DomainAvailability {
   available: boolean;
   /** Wholesale/cost price from Dreamscape, if returned, in AUD. */
   costPrice?: number;
+  /** Wholesale renewal price from Dreamscape, if returned, in AUD. */
+  renewCostPrice?: number;
   currency?: string;
   /** Raw payload for the individual domain, for debugging/iteration. */
   raw?: unknown;
