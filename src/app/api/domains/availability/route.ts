@@ -58,11 +58,14 @@ export async function GET(request: Request) {
     const availability = await checkAvailability(domains);
     const results = availability.map((row) => {
       const price = retailPrice(row.costPrice);
+      const renewPrice = retailPrice(row.renewCostPrice);
       return {
         domainName: row.domainName,
         available: row.available,
         price,
         priceFormatted: formatAud(price),
+        renewPrice,
+        renewPriceFormatted: formatAud(renewPrice),
       };
     });
 

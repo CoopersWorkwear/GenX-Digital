@@ -43,7 +43,10 @@ function normaliseAvailability(
       return {
         domainName,
         available: parseAvailable(r),
-        costPrice: num(r.price) ?? num(r.register) ?? num(r.cost),
+        // Sandbox returns the wholesale price inline as `register_price`.
+        costPrice:
+          num(r.register_price) ?? num(r.price) ?? num(r.register) ?? num(r.cost),
+        renewCostPrice: num(r.renew_price) ?? num(r.renew),
         currency: str(r.currency) ?? "AUD",
         raw: row,
       };
@@ -60,22 +63,50 @@ function normaliseAvailability(
 }
 
 /**
- * Fetch TLD pricing handbook.
- * Endpoint: GET /handbooks/tlds (exact path to confirm against sandbox).
+ * Fetch the full TLD pricing list.
+ * Endpoint: GET /domains/tlds — paginated; each row carries a nested
+ * `price: { register, renew, transfer }` object. Used for the pricing/browse
+ * pages (domain search reads prices inline from the availability response).
  */
 export async function getTldPricing(): Promise<TldPrice[]> {
-  const payload = await dreamscapeRequest<unknown>("/handbooks/tlds");
-  const rows = extractRows(payload);
-  return rows.map((row) => {
-    const r = row as Record<string, unknown>;
-    return {
-      tld: str(r.tld) ?? str(r.name) ?? "",
-      register: num(r.register) ?? num(r.registration) ?? num(r.price),
-      renew: num(r.renew) ?? num(r.renewal),
-      transfer: num(r.transfer),
-      currency: str(r.currency) ?? "AUD",
-    };
-  });
+  const all: TldPrice[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  // Safety cap: never loop more than 20 pages regardless of the API response.
+  do {
+    const payload = await dreamscapeRequest<unknown>("/domains/tlds", {
+      query: { page, per_page: 100 },
+    });
+    for (const row of extractRows(payload)) {
+      const r = row as Record<string, unknown>;
+      const price = (r.price ?? {}) as Record<string, unknown>;
+      const tld = str(r.tld) ?? str(r.name);
+      if (!tld) continue;
+      all.push({
+        tld,
+        register: num(price.register) ?? num(r.register),
+        renew: num(price.renew) ?? num(r.renew),
+        transfer: num(price.transfer) ?? num(r.transfer),
+        currency: "AUD",
+      });
+    }
+    totalPages = pageCount(payload);
+    page += 1;
+  } while (page <= totalPages && page <= 20);
+
+  return all;
+}
+
+/** Read pagination.total_pages from a Dreamscape list response (default 1). */
+function pageCount(payload: unknown): number {
+  if (payload && typeof payload === "object") {
+    const pagination = (payload as Record<string, unknown>).pagination;
+    if (pagination && typeof pagination === "object") {
+      return num((pagination as Record<string, unknown>).total_pages) ?? 1;
+    }
+  }
+  return 1;
 }
 
 // --- small, shared parsing helpers -----------------------------------------
