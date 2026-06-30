@@ -5,9 +5,16 @@ import { uploadBuilderObjects, type UploadedFile } from "@/lib/supabase/storage"
 import { safeScheme } from "@/lib/builder/schemes";
 import { encodeBrief } from "@/lib/builder/encode";
 import type { BuilderBrief } from "@/lib/builder/types";
+import {
+  isImageGenConfigured,
+  generateImage,
+  logoPrompt,
+  heroImagePrompt,
+} from "@/lib/ai/images";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // image generation can take a while
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024; // 4MB per file
 const MAX_IMAGES = 4;
@@ -76,6 +83,24 @@ export async function POST(request: Request) {
     wantsImages: f.wantsImages === "true",
     wantsColourHelp: f.wantsColourHelp === "true",
   };
+
+  // Auto-generate assets when requested and an image provider is configured.
+  // Falls back silently to capturing the request if generation isn't set up.
+  if (isImageGenConfigured()) {
+    try {
+      const hasUploadedLogo = uploads.some((u) => u.path.includes("/logo"));
+      if (brief.wantsLogo && !hasUploadedLogo) {
+        const blob = await generateImage({ prompt: logoPrompt(f.businessName, f.description) });
+        if (blob) uploads.push({ blob, path: `builds/${id}/logo.png`, contentType: "image/png" });
+      }
+      if (brief.wantsImages) {
+        const blob = await generateImage({ prompt: heroImagePrompt(f.businessName, f.description) });
+        if (blob) uploads.push({ blob, path: `builds/${id}/img-gen-0.png`, contentType: "image/png" });
+      }
+    } catch (err) {
+      console.error("[website-builder] asset generation failed", (err as Error).message);
+    }
+  }
 
   try {
     const urls = await uploadBuilderObjects(uploads);
