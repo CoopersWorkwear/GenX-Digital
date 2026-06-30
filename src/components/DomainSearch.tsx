@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useCart } from "@/lib/cart/CartContext";
 
 interface DomainResult {
   domainName: string;
   available: boolean;
+  price: number | null;
   priceFormatted: string;
+  renewPrice?: number | null;
   renewPriceFormatted?: string;
 }
 
@@ -21,6 +24,7 @@ export function DomainSearch() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<DomainResult[] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const { add, has } = useCart();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,39 +89,57 @@ export function DomainSearch() {
       )}
 
       {results && results.length > 0 && (
-        <ul className="mt-6 divide-y divide-slate-100 rounded-xl border border-slate-200">
-          {results.map((r) => (
-            <li
-              key={r.domainName}
-              className="flex items-center justify-between gap-4 px-4 py-3"
-            >
-              <span className="font-medium">{r.domainName}</span>
-              <span className="flex items-center gap-3">
-                {r.available ? (
-                  <>
-                    <span className="text-right">
-                      <span className="block text-sm font-semibold text-slate-800">
-                        {r.priceFormatted}
-                        <span className="font-normal text-slate-500">/yr</span>
-                      </span>
-                      {r.renewPriceFormatted && (
-                        <span className="block text-xs text-slate-400">
-                          renews {r.renewPriceFormatted}/yr
+        <ul className="mt-6 divide-y divide-slate-100 rounded-xl border border-slate-200 text-left">
+          {results.map((r) => {
+            const id = `domain:${r.domainName}`;
+            const inCart = has(id);
+            return (
+              <li
+                key={r.domainName}
+                className="flex items-center justify-between gap-4 px-4 py-3"
+              >
+                <span className="font-medium">{r.domainName}</span>
+                <span className="flex items-center gap-3">
+                  {r.available ? (
+                    <>
+                      <span className="text-right">
+                        <span className="block text-sm font-semibold text-slate-800">
+                          {r.priceFormatted}
+                          <span className="font-normal text-slate-500">/yr</span>
                         </span>
-                      )}
+                        {r.renewPriceFormatted && (
+                          <span className="block text-xs text-slate-400">
+                            renews {r.renewPriceFormatted}/yr
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        disabled={inCart || r.price === null}
+                        onClick={() =>
+                          r.price !== null &&
+                          add({
+                            id,
+                            type: "domain",
+                            name: r.domainName,
+                            price: r.price,
+                            renewPrice: r.renewPrice ?? undefined,
+                            billingCycle: "annually",
+                          })
+                        }
+                        className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-700 disabled:bg-slate-300"
+                      >
+                        {inCart ? "Added" : "Add"}
+                      </button>
+                    </>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                      Taken
                     </span>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      Available
-                    </span>
-                  </>
-                ) : (
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-                    Taken
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
+                  )}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

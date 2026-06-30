@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CartProvider } from "@/lib/cart/CartContext";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "GenX Digital — Domains, Hosting, SSL & Email",
+  title: {
+    default: "GenX Digital — Domains, Hosting, SSL & Email",
+    template: "%s · GenX Digital",
+  },
   description:
     "Register domains, host your site, secure it with SSL, and get business email — all from GenX Digital.",
 };
@@ -14,7 +20,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en-AU">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="flex min-h-screen flex-col antialiased">
+        <CartProvider>
+          <Header />
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </CartProvider>
+      </body>
     </html>
   );
 }

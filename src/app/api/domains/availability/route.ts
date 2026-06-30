@@ -62,9 +62,9 @@ export async function GET(request: Request) {
       return {
         domainName: row.domainName,
         available: row.available,
-        price,
+        price: price ?? null,
         priceFormatted: formatAud(price),
-        renewPrice,
+        renewPrice: renewPrice ?? null,
         renewPriceFormatted: formatAud(renewPrice),
       };
     });
