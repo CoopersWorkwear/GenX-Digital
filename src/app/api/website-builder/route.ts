@@ -12,6 +12,7 @@ import {
   heroImagePrompt,
 } from "@/lib/ai/images";
 import { isSiteGenConfigured, generateSiteContent } from "@/lib/ai/generateSite";
+import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -126,7 +127,9 @@ export async function POST(request: Request) {
       ]);
 
       logRequest(id, f.email, brief);
-      return NextResponse.json({ ok: true, previewUrl: `/preview?id=${id}` });
+      const previewUrl = `/preview?id=${id}`;
+      await sendBuilderEmail(f.email, previewUrl, f.businessName);
+      return NextResponse.json({ ok: true, previewUrl });
     }
   } catch (err) {
     console.error("[website-builder] storage error", (err as Error).message);
@@ -135,9 +138,26 @@ export async function POST(request: Request) {
 
   // Fallback: no storage — encode the text brief in the URL (no images).
   logRequest(id, f.email, brief);
-  return NextResponse.json({
-    ok: true,
-    previewUrl: `/preview?d=${encodeURIComponent(encodeBrief(brief))}`,
+  const previewUrl = `/preview?d=${encodeURIComponent(encodeBrief(brief))}`;
+  await sendBuilderEmail(f.email, previewUrl, f.businessName);
+  return NextResponse.json({ ok: true, previewUrl });
+}
+
+async function sendBuilderEmail(
+  email: string,
+  previewUrl: string,
+  business: string,
+): Promise<void> {
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const link = `${base}${previewUrl}`;
+  await sendEmail({
+    to: email,
+    subject: "Your new website preview is ready",
+    html: emailLayout(
+      "Your website preview",
+      `<p>Your starter website for <strong>${escapeHtml(business)}</strong> is ready.</p>` +
+        `<p><a href="${link}" style="color:#ec008c;font-weight:bold">Open your website preview →</a></p>`,
+    ),
   });
 }
 

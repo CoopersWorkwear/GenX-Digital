@@ -56,3 +56,34 @@ export async function getOrdersByEmail(email: string): Promise<OrderWithItems[]>
     items: items.filter((it) => it.order_id === o.id),
   }));
 }
+
+/** Fetch the most recent orders across all customers (admin view). */
+export async function getRecentOrders(limit = 100): Promise<OrderWithItems[]> {
+  const config = getSupabaseAdminConfig();
+  if (!config) return [];
+
+  const headers = {
+    apikey: config.serviceRoleKey,
+    Authorization: `Bearer ${config.serviceRoleKey}`,
+  };
+
+  const ordersRes = await fetch(
+    `${config.url}/rest/v1/orders?order=created_at.desc&limit=${limit}`,
+    { headers, cache: "no-store" },
+  );
+  if (!ordersRes.ok) return [];
+  const orders = (await ordersRes.json()) as OrderRow[];
+  if (orders.length === 0) return [];
+
+  const ids = orders.map((o) => o.id);
+  const itemsRes = await fetch(
+    `${config.url}/rest/v1/order_items?order_id=in.(${ids.join(",")})`,
+    { headers, cache: "no-store" },
+  );
+  const items = itemsRes.ok ? ((await itemsRes.json()) as OrderItemRow[]) : [];
+
+  return orders.map((o) => ({
+    ...o,
+    items: items.filter((it) => it.order_id === o.id),
+  }));
+}

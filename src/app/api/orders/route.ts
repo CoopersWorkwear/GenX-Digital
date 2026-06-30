@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSupabaseAdminConfig } from "@/lib/supabase/config";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
+import { adminEmails } from "@/lib/auth/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,6 +54,10 @@ export async function POST(request: Request) {
   // Link the order to the signed-in user, if any.
   const user = await getCurrentUser();
   const userId = user?.id ?? null;
+
+  // Confirmation + owner notification (best-effort; no-ops without an email key).
+  await sendOrderEmails(order);
+
   const supabase = getSupabaseAdminConfig();
 
   if (!supabase) {
@@ -71,6 +77,34 @@ export async function POST(request: Request) {
     console.error("[orders] persist failed", (err as Error).message);
     // Still acknowledge so the customer isn't blocked; we have the server log.
     return NextResponse.json({ ok: true, persisted: false });
+  }
+}
+
+async function sendOrderEmails(order: Order): Promise<void> {
+  const lines = order.items
+    .map((i) => `<li>${escapeHtml(i.name)} — A$${i.price.toFixed(2)}</li>`)
+    .join("");
+  const heading = order.paymentRef ? "Payment received" : "Order request received";
+  const body =
+    `<p>Hi ${escapeHtml(order.name)},</p>` +
+    `<p>${heading}. Here's your summary:</p>` +
+    `<ul>${lines}</ul>` +
+    `<p><strong>Total: A$${order.total.toFixed(2)}</strong> (incl. GST)</p>` +
+    `<p>We'll be in touch shortly.</p>`;
+
+  await sendEmail({
+    to: order.email,
+    subject: "Your GenX Digital order",
+    html: emailLayout("Thanks for your order", body),
+  });
+
+  const owner = adminEmails()[0];
+  if (owner) {
+    await sendEmail({
+      to: owner,
+      subject: `New order — ${order.email}`,
+      html: emailLayout("New order received", body),
+    });
   }
 }
 
