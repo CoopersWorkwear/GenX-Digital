@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DomainSearch } from "@/components/DomainSearch";
+import { PageHero } from "@/components/PageHero";
 import { getTldPricing } from "@/lib/dreamscape/domains";
 import { isDreamscapeConfigured } from "@/lib/dreamscape/config";
 import { retailPrice, formatAud } from "@/lib/pricing";
@@ -35,18 +36,17 @@ export default async function DomainsPage() {
   const pricing = await loadPricing();
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
-      <h1 className="text-3xl font-bold tracking-tight">Find your domain</h1>
-      <p className="mt-3 max-w-2xl text-slate-600">
-        Search availability and register in minutes. All prices are in AUD and
-        include GST; renewals are billed at the same rate.
-      </p>
+    <main>
+      <PageHero
+        title="Find your domain"
+        subtitle="Search availability and register in minutes. All prices are in AUD and include GST; renewals are billed at the same rate."
+      />
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <div className="flex justify-center">
+          <DomainSearch />
+        </div>
 
-      <div className="mt-8">
-        <DomainSearch />
-      </div>
-
-      <section className="mt-16">
+        <section className="mt-16">
         <h2 className="text-xl font-semibold">Domain pricing</h2>
         {!pricing ? (
           <p className="mt-4 text-sm text-slate-500">
@@ -77,7 +77,8 @@ export default async function DomainsPage() {
             </table>
           </div>
         )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
