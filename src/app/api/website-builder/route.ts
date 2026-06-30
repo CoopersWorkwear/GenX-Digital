@@ -12,6 +12,7 @@ import {
   heroImagePrompt,
 } from "@/lib/ai/images";
 import { isSiteGenConfigured, generateSiteContent } from "@/lib/ai/generateSite";
+import { monogramSvg } from "@/lib/builder/logo";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
 
 export const runtime = "nodejs";
@@ -91,21 +92,37 @@ export async function POST(request: Request) {
     brief.content = (await generateSiteContent(brief)) ?? undefined;
   }
 
-  // Auto-generate assets when requested and an image provider is configured.
-  // Falls back silently to capturing the request if generation isn't set up.
-  if (isImageGenConfigured()) {
+  // Create a logo when requested: a real generated image if an image provider
+  // is configured, otherwise an instant themed monogram so every site has one.
+  const hasUploadedLogo = uploads.some((u) => u.path.includes("/logo"));
+  if (brief.wantsLogo && !hasUploadedLogo) {
+    let logoBlob: Blob | null = null;
+    if (isImageGenConfigured()) {
+      try {
+        logoBlob = await generateImage({ prompt: logoPrompt(f.businessName, f.description) });
+      } catch (err) {
+        console.error("[website-builder] logo generation failed", (err as Error).message);
+      }
+    }
+    if (logoBlob) {
+      uploads.push({ blob: logoBlob, path: `builds/${id}/logo.png`, contentType: "image/png" });
+    } else {
+      const svg = monogramSvg(f.businessName, scheme.primary, scheme.accent);
+      uploads.push({
+        blob: new Blob([svg], { type: "image/svg+xml" }),
+        path: `builds/${id}/logo.svg`,
+        contentType: "image/svg+xml",
+      });
+    }
+  }
+
+  // Generate hero/section imagery when requested and a provider is configured.
+  if (brief.wantsImages && isImageGenConfigured()) {
     try {
-      const hasUploadedLogo = uploads.some((u) => u.path.includes("/logo"));
-      if (brief.wantsLogo && !hasUploadedLogo) {
-        const blob = await generateImage({ prompt: logoPrompt(f.businessName, f.description) });
-        if (blob) uploads.push({ blob, path: `builds/${id}/logo.png`, contentType: "image/png" });
-      }
-      if (brief.wantsImages) {
-        const blob = await generateImage({ prompt: heroImagePrompt(f.businessName, f.description) });
-        if (blob) uploads.push({ blob, path: `builds/${id}/img-gen-0.png`, contentType: "image/png" });
-      }
+      const blob = await generateImage({ prompt: heroImagePrompt(f.businessName, f.description) });
+      if (blob) uploads.push({ blob, path: `builds/${id}/img-gen-0.png`, contentType: "image/png" });
     } catch (err) {
-      console.error("[website-builder] asset generation failed", (err as Error).message);
+      console.error("[website-builder] image generation failed", (err as Error).message);
     }
   }
 
