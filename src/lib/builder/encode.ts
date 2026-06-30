@@ -1,17 +1,24 @@
+import type { BuilderBrief } from "./types";
+import { safeScheme } from "./schemes";
+
 /**
- * Encode/decode the website-builder brief into a URL-safe string so a preview
- * can be generated and shared statelessly (no database needed for the simple
- * template). Works in both the browser and the Node server runtime.
+ * Encode/decode a (text-only) build brief into a URL-safe string for the
+ * stateless preview fallback used when Supabase Storage isn't available.
+ * Works in both the browser and the Node server runtime.
  */
 
-export interface BuilderBrief {
-  businessName: string;
-  description: string;
-  domain: string;
-}
-
 export function encodeBrief(brief: BuilderBrief): string {
-  return btoa(encodeURIComponent(JSON.stringify(brief)));
+  // Don't carry file URLs through the URL fallback — keep it small.
+  const slim: BuilderBrief = {
+    businessName: brief.businessName,
+    domain: brief.domain,
+    description: brief.description,
+    scheme: brief.scheme,
+    wantsLogo: brief.wantsLogo,
+    wantsImages: brief.wantsImages,
+    wantsColourHelp: brief.wantsColourHelp,
+  };
+  return btoa(encodeURIComponent(JSON.stringify(slim)));
 }
 
 export function decodeBrief(encoded: string): BuilderBrief | null {
@@ -20,10 +27,17 @@ export function decodeBrief(encoded: string): BuilderBrief | null {
     if (
       parsed &&
       typeof parsed.businessName === "string" &&
-      typeof parsed.description === "string" &&
-      typeof parsed.domain === "string"
+      typeof parsed.description === "string"
     ) {
-      return parsed as BuilderBrief;
+      return {
+        businessName: parsed.businessName,
+        domain: typeof parsed.domain === "string" ? parsed.domain : undefined,
+        description: parsed.description,
+        scheme: safeScheme(parsed.scheme),
+        wantsLogo: Boolean(parsed.wantsLogo),
+        wantsImages: Boolean(parsed.wantsImages),
+        wantsColourHelp: Boolean(parsed.wantsColourHelp),
+      };
     }
     return null;
   } catch {
