@@ -3,6 +3,7 @@ import { decodeBrief } from "@/lib/builder/encode";
 import { publicUrl } from "@/lib/supabase/storage";
 import { safeScheme } from "@/lib/builder/schemes";
 import { fallbackContent } from "@/lib/builder/fallback";
+import { BrowserMockup } from "@/components/BrowserMockup";
 import { Reveal } from "@/components/motion/Reveal";
 import {
   BoltIcon,
@@ -142,12 +143,19 @@ export default async function PreviewPage({
               </a>
             </div>
           </div>
-          {heroImage && (
+          {heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={heroImage}
               alt=""
               className="h-72 w-full rounded-2xl object-cover shadow-2xl lg:h-96"
+            />
+          ) : (
+            <BrowserMockup
+              primary={primary}
+              accent={accent}
+              domain={domain ?? "yourbusiness.com.au"}
+              className="lg:rotate-1"
             />
           )}
         </div>

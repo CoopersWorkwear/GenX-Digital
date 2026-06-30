@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DomainSearch } from "@/components/DomainSearch";
+import { BrowserMockup } from "@/components/BrowserMockup";
 import { Reveal } from "@/components/motion/Reveal";
 import { Parallax } from "@/components/motion/Parallax";
 import { Counter } from "@/components/motion/Counter";
@@ -63,35 +64,76 @@ export default function Home() {
           />
         </Parallax>
 
-        <div className="mx-auto flex max-w-6xl flex-col items-center px-6 py-28 text-center">
-          <Reveal>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-700 backdrop-blur">
-              <SparklesIcon className="h-3.5 w-3.5" /> Domains, hosting & AI websites in one place
-            </span>
-          </Reveal>
-          <Reveal delay={80}>
-            <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-              Your business online,{" "}
-              <span className="text-gradient">start to finish.</span>
-            </h1>
-          </Reveal>
-          <Reveal delay={160}>
-            <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600">
-              Find the perfect domain, then add hosting, SSL and email — all from
-              one trusted Australian provider.
-            </p>
-          </Reveal>
-          <Reveal delay={240} className="mt-10 flex w-full justify-center">
-            <DomainSearch />
-          </Reveal>
-          <Reveal delay={320}>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-500">
-              {["590+ extensions", "Free DNS", "Australian support", "Secure checkout"].map((t) => (
-                <span key={t} className="inline-flex items-center gap-1.5">
-                  <CheckIcon className="h-4 w-4 text-brand-600" /> {t}
-                </span>
-              ))}
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-24 lg:grid-cols-2 lg:py-28">
+          {/* Left: AI builder pitch */}
+          <div className="text-center lg:text-left">
+            <Reveal>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-700 backdrop-blur">
+                <SparklesIcon className="h-3.5 w-3.5" /> AI Website Builder · built by Claude
+              </span>
+            </Reveal>
+            <Reveal delay={80}>
+              <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-6xl">
+                A complete website,{" "}
+                <span className="text-gradient">built for you by AI.</span>
+              </h1>
+            </Reveal>
+            <Reveal delay={160}>
+              <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600 lg:mx-0">
+                Tell us about your business and our AI builds a finished,
+                ready-to-launch website — copy, logo, images, FAQs and all.
+                Then add the domain, hosting and email to match.
+              </p>
+            </Reveal>
+            <Reveal delay={240}>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <Link
+                  href="/website-builder"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-brand-200 transition hover:scale-105"
+                >
+                  <SparklesIcon className="h-5 w-5" /> Build my website free
+                </Link>
+                <Link
+                  href="#domains"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:border-brand-300"
+                >
+                  <GlobeIcon className="h-5 w-5 text-brand-600" /> Search a domain
+                </Link>
+              </div>
+            </Reveal>
+            <Reveal delay={320}>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-500 lg:justify-start">
+                {["No design skills", "Ready in minutes", "Logo & images included", "Free preview"].map((t) => (
+                  <span key={t} className="inline-flex items-center gap-1.5">
+                    <CheckIcon className="h-4 w-4 text-brand-600" /> {t}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+
+          {/* Right: live website mockup */}
+          <Reveal delay={200} className="relative">
+            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-brand-200/40 to-violet-200/40 blur-2xl" />
+            <Parallax speed={0.06}>
+              <BrowserMockup primary="#ec008c" accent="#7c3aed" domain="yourbusiness.com.au" className="rotate-1" />
+            </Parallax>
+            <div className="absolute -bottom-5 -left-5 hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-xl sm:flex sm:items-center sm:gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <SparklesIcon className="h-5 w-5" />
+              </span>
+              <div className="text-left">
+                <p className="text-sm font-semibold">Generated in 30s</p>
+                <p className="text-xs text-slate-500">copy · logo · images</p>
+              </div>
             </div>
+          </Reveal>
+        </div>
+
+        {/* Domain search bar */}
+        <div id="domains" className="mx-auto -mt-6 max-w-6xl px-6 pb-10">
+          <Reveal className="flex w-full justify-center">
+            <DomainSearch />
           </Reveal>
         </div>
 
