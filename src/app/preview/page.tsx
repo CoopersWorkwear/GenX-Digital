@@ -49,8 +49,15 @@ export default async function PreviewPage({
   }
 
   const { primary, accent } = brief.scheme;
-  const tagline = firstSentence(brief.description);
-  const services = deriveServices(brief.description);
+  const content = brief.content;
+  const headline = content?.heroHeadline ?? brief.businessName;
+  const subheadline = content?.heroSubheadline ?? firstSentence(brief.description);
+  const ctaText = content?.ctaText ?? "Get in touch";
+  const aboutTitle = content?.aboutTitle ?? "About us";
+  const aboutBody = content?.aboutBody ?? brief.description;
+  const services =
+    content?.services ??
+    deriveServices(brief.description).map((title) => ({ title, description: "" }));
   const images = brief.imageUrls ?? [];
 
   return (
@@ -68,24 +75,32 @@ export default async function PreviewPage({
           className="px-6 py-24 text-center text-white"
           style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
         >
-          {brief.logoUrl && (
+          {brief.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={brief.logoUrl} alt={brief.businessName} className="mx-auto mb-6 h-16 w-auto" />
+          ) : (
+            content && (
+              <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/80">
+                {brief.businessName}
+              </p>
+            )
           )}
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{brief.businessName}</h1>
-          {tagline && <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90">{tagline}</p>}
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{headline}</h1>
+          {subheadline && (
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90">{subheadline}</p>
+          )}
           <span
             className="mt-8 inline-block rounded-lg bg-white px-6 py-3 font-semibold"
             style={{ color: primary }}
           >
-            Get in touch
+            {ctaText}
           </span>
         </section>
 
         {/* About */}
         <section className="mx-auto max-w-3xl px-6 py-20">
-          <h2 className="text-2xl font-bold" style={{ color: primary }}>About us</h2>
-          <p className="mt-4 whitespace-pre-line text-slate-600">{brief.description}</p>
+          <h2 className="text-2xl font-bold" style={{ color: primary }}>{aboutTitle}</h2>
+          <p className="mt-4 whitespace-pre-line text-slate-600">{aboutBody}</p>
         </section>
 
         {/* Image gallery */}
@@ -115,12 +130,34 @@ export default async function PreviewPage({
                   >
                     {i + 1}
                   </div>
-                  <p className="mt-4 font-medium">{s}</p>
+                  <p className="mt-4 font-semibold">{s.title}</p>
+                  {s.description && (
+                    <p className="mt-2 text-sm text-slate-500">{s.description}</p>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         </section>
+
+        {/* Why choose us (AI-generated) */}
+        {content?.whyPoints && content.whyPoints.length > 0 && (
+          <section className="bg-slate-50 px-6 py-20">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="text-2xl font-bold" style={{ color: primary }}>
+                {content.whyTitle}
+              </h2>
+              <ul className="mt-8 space-y-3 text-left">
+                {content.whyPoints.map((point, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span style={{ color: accent }}>✓</span>
+                    <span className="text-slate-600">{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
 
         {/* Contact */}
         <section className="px-6 py-20 text-center">
