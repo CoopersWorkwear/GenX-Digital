@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart/CartContext";
+import { createSupabaseBrowserClient, isSupabaseAuthConfigured } from "@/lib/supabase/browser";
+import { CartIcon, UserIcon } from "@/components/icons";
 
 const NAV = [
   { href: "/domains", label: "Domains" },
@@ -13,6 +16,17 @@ const NAV = [
 
 export function Header() {
   const { count } = useCart();
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    if (!isSupabaseAuthConfigured()) return;
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user)));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
+      setSignedIn(Boolean(session?.user)),
+    );
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 backdrop-blur">
@@ -30,17 +44,27 @@ export function Header() {
           ))}
         </nav>
 
-        <Link
-          href="/cart"
-          className="relative inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-600"
-        >
-          Cart
-          {count > 0 && (
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-xs font-bold text-white">
-              {count}
-            </span>
-          )}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={signedIn ? "/account" : "/login"}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:text-brand-600"
+          >
+            <UserIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">{signedIn ? "Account" : "Log in"}</span>
+          </Link>
+          <Link
+            href="/cart"
+            className="relative inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-600"
+          >
+            <CartIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Cart</span>
+            {count > 0 && (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-xs font-bold text-white">
+                {count}
+              </span>
+            )}
+          </Link>
+        </div>
       </div>
     </header>
   );
