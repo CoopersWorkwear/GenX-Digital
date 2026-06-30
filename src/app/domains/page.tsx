@@ -38,8 +38,8 @@ export default async function DomainsPage() {
     <main className="mx-auto max-w-6xl px-6 py-16">
       <h1 className="text-3xl font-bold tracking-tight">Find your domain</h1>
       <p className="mt-3 max-w-2xl text-slate-600">
-        Search availability and register in minutes. Prices shown include our
-        margin; renewals are billed at the same rate.
+        Search availability and register in minutes. All prices are in AUD and
+        include GST; renewals are billed at the same rate.
       </p>
 
       <div className="mt-8">
