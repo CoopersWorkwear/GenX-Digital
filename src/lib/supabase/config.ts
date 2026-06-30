@@ -9,8 +9,10 @@ export interface SupabaseConfig {
 }
 
 export function getSupabaseAdminConfig(): SupabaseConfig | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  // Strip any stray whitespace/newlines that can sneak in when the key is
+  // pasted into a dashboard field — they make the HTTP header value invalid.
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.replace(/\s+/g, "");
   if (!url || !serviceRoleKey) return null;
   return { url, serviceRoleKey };
 }
