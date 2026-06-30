@@ -21,6 +21,8 @@ const orderSchema = z.object({
     )
     .min(1),
   total: z.number().nonnegative(),
+  /** Stripe PaymentIntent id when the order was paid online. */
+  paymentRef: z.string().max(255).optional().nullable(),
 });
 
 type Order = z.infer<typeof orderSchema>;
@@ -91,7 +93,8 @@ async function persistOrder(
     body: JSON.stringify({
       email: order.email,
       user_id: userId,
-      status: "pending",
+      status: order.paymentRef ? "paid" : "pending",
+      payment_ref: order.paymentRef ?? null,
       subtotal: order.total,
       total: order.total,
     }),
