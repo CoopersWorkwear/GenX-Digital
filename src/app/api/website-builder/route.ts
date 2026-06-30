@@ -11,6 +11,7 @@ import {
   logoPrompt,
   heroImagePrompt,
 } from "@/lib/ai/images";
+import { isSiteGenConfigured, generateSiteContent } from "@/lib/ai/generateSite";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,6 +84,11 @@ export async function POST(request: Request) {
     wantsImages: f.wantsImages === "true",
     wantsColourHelp: f.wantsColourHelp === "true",
   };
+
+  // Generate tailored website copy with the Claude API when configured.
+  if (isSiteGenConfigured()) {
+    brief.content = (await generateSiteContent(brief)) ?? undefined;
+  }
 
   // Auto-generate assets when requested and an image provider is configured.
   // Falls back silently to capturing the request if generation isn't set up.

@@ -5,6 +5,23 @@ export interface ColorScheme {
   accent: string;
 }
 
+export interface SiteService {
+  title: string;
+  description: string;
+}
+
+/** AI-generated website copy, rendered into the preview template. */
+export interface SiteContent {
+  heroHeadline: string;
+  heroSubheadline: string;
+  aboutTitle: string;
+  aboutBody: string;
+  services: SiteService[];
+  whyTitle: string;
+  whyPoints: string[];
+  ctaText: string;
+}
+
 export interface BuilderBrief {
   businessName: string;
   /** Optional — not all customers have a domain yet. */
@@ -21,4 +38,6 @@ export interface BuilderBrief {
   wantsImages?: boolean;
   /** Customer wants help choosing a colour scheme. */
   wantsColourHelp?: boolean;
+  /** AI-generated copy (present once generated). */
+  content?: SiteContent;
 }
