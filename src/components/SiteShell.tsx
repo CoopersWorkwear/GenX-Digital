@@ -20,7 +20,8 @@ export function SiteShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (pathname?.startsWith("/preview")) {
+  // Bare pages: generated customer sites and printable invoices.
+  if (pathname?.startsWith("/preview") || pathname?.startsWith("/account/invoices/")) {
     return <>{children}</>;
   }
   return (

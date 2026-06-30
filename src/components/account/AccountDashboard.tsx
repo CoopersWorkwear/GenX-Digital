@@ -491,32 +491,43 @@ function TransferForm() {
 
 function Orders({ orders }: { orders: Order[] }) {
   return (
-    <Panel title="Order history">
+    <Panel title="Order history & invoices">
       {orders.length === 0 ? (
         <p className="text-sm text-slate-500">You haven&apos;t placed any orders yet.</p>
       ) : (
         <ul className="divide-y divide-slate-100">
-          {orders.map((o) => (
-            <li key={o.id} className="py-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{fmtDate(o.created_at)}</span>
-                <span className="flex items-center gap-3">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-600">
-                    {o.status}
+          {orders.map((o) => {
+            const paid = o.status === "paid" || o.status === "completed";
+            return (
+              <li key={o.id} className="py-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{fmtDate(o.created_at)}</span>
+                  <span className="flex items-center gap-3">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-600">
+                      {o.status}
+                    </span>
+                    <span className="font-semibold">{aud(Number(o.total))}</span>
                   </span>
-                  <span className="font-semibold">{aud(Number(o.total))}</span>
-                </span>
-              </div>
-              <ul className="mt-2 space-y-1">
-                {o.items.map((it) => (
-                  <li key={it.id} className="flex justify-between text-sm text-slate-500">
-                    <span>{it.description ?? it.product_ref ?? it.product_type}</span>
-                    <span>{aud(Number(it.unit_price))}</span>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
+                </div>
+                <ul className="mt-2 space-y-1">
+                  {o.items.map((it) => (
+                    <li key={it.id} className="flex justify-between text-sm text-slate-500">
+                      <span>{it.description ?? it.product_ref ?? it.product_type}</span>
+                      <span>{aud(Number(it.unit_price))}</span>
+                    </li>
+                  ))}
+                </ul>
+                {paid && (
+                  <Link
+                    href={`/account/invoices/${o.id}`}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline"
+                  >
+                    <CardIcon className="h-4 w-4" /> View tax invoice
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </Panel>
