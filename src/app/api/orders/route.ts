@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSupabaseAdminConfig } from "@/lib/supabase/config";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
   }
 
   const order = parsed.data;
+  // Link the order to the signed-in user, if any.
+  const user = await getCurrentUser();
+  const userId = user?.id ?? null;
   const supabase = getSupabaseAdminConfig();
 
   if (!supabase) {
@@ -59,7 +63,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const orderId = await persistOrder(supabase, order);
+    const orderId = await persistOrder(supabase, order, userId);
     return NextResponse.json({ ok: true, persisted: true, orderId });
   } catch (err) {
     console.error("[orders] persist failed", (err as Error).message);
@@ -72,6 +76,7 @@ export async function POST(request: Request) {
 async function persistOrder(
   supabase: { url: string; serviceRoleKey: string },
   order: Order,
+  userId: string | null,
 ): Promise<string> {
   const headers = {
     "Content-Type": "application/json",
@@ -85,6 +90,7 @@ async function persistOrder(
     headers,
     body: JSON.stringify({
       email: order.email,
+      user_id: userId,
       status: "pending",
       subtotal: order.total,
       total: order.total,
