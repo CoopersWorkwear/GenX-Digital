@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/auth/admin";
 import { getRecentOrders } from "@/lib/supabase/orders";
 import { formatAud } from "@/lib/pricing";
+import { OrderActions } from "@/components/admin/OrderActions";
 
 export const metadata: Metadata = { title: "Admin" };
 export const dynamic = "force-dynamic";
@@ -38,12 +39,13 @@ export default async function AdminPage() {
               <th className="px-4 py-3 font-medium">Items</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Total</th>
+              <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                   No orders yet.
                 </td>
               </tr>
@@ -63,6 +65,9 @@ export default async function AdminPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 font-medium">{formatAud(Number(o.total))}</td>
+                  <td className="px-4 py-3">
+                    <OrderActions orderId={o.id} status={o.status} />
+                  </td>
                 </tr>
               ))
             )}
