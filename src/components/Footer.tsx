@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NewsletterForm } from "@/components/NewsletterForm";
 
 const COLUMNS = [
   {
@@ -31,8 +32,22 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-100 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-6 py-12">
+    <footer className="border-t border-slate-100">
+      <div className="bg-gradient-to-br from-brand-600 to-violet-600 text-white">
+        <div className="mx-auto max-w-6xl px-6 py-12 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-xl font-bold">Domain deals &amp; online-business tips</h3>
+            <p className="mt-1 text-sm text-white/80">
+              The occasional email with offers and helpful guides. No spam.
+            </p>
+          </div>
+          <div className="mt-4 sm:mt-0">
+            <NewsletterForm />
+          </div>
+        </div>
+      </div>
+      <div className="bg-slate-50">
+        <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,6 +78,7 @@ export function Footer() {
         <div className="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-400">
           © {new Date().getFullYear()} GenX Digital · genxdigital.com.au · All
           prices in AUD
+        </div>
         </div>
       </div>
     </footer>
