@@ -1,20 +1,37 @@
 import Link from "next/link";
 import { decodeBrief } from "@/lib/builder/encode";
+import { publicUrl } from "@/lib/supabase/storage";
+import { safeScheme } from "@/lib/builder/schemes";
+import type { BuilderBrief } from "@/lib/builder/types";
 
 export const metadata = { title: "Website preview" };
+export const dynamic = "force-dynamic";
 
-/**
- * Renders a clean, templated one-page website from the customer's brief — the
- * "simple template" version of the AI website builder. The brief is passed in
- * the URL so a preview can be generated and shared without a database.
- */
+async function loadBrief(params: { id?: string; d?: string }): Promise<BuilderBrief | null> {
+  if (params.id) {
+    const url = publicUrl(`builds/${params.id}/brief.json`);
+    if (url) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (res.ok) {
+          const raw = await res.json();
+          return { ...raw, scheme: safeScheme(raw.scheme) } as BuilderBrief;
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+  }
+  if (params.d) return decodeBrief(params.d);
+  return null;
+}
+
 export default async function PreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ d?: string }>;
+  searchParams: Promise<{ id?: string; d?: string }>;
 }) {
-  const { d } = await searchParams;
-  const brief = d ? decodeBrief(d) : null;
+  const brief = await loadBrief(await searchParams);
 
   if (!brief) {
     return (
@@ -31,58 +48,71 @@ export default async function PreviewPage({
     );
   }
 
+  const { primary, accent } = brief.scheme;
   const tagline = firstSentence(brief.description);
   const services = deriveServices(brief.description);
+  const images = brief.imageUrls ?? [];
 
   return (
     <div>
-      {/* Preview banner */}
-      <div className="bg-brand-600 px-6 py-2.5 text-center text-sm text-white">
+      <div className="px-6 py-2.5 text-center text-sm text-white" style={{ background: primary }}>
         Preview of your new website ·{" "}
         <Link href="/contact" className="font-semibold underline">
           Make it live with GenX Digital
         </Link>
       </div>
 
-      {/* The customer's templated site */}
       <div className="bg-white text-slate-800">
         {/* Hero */}
-        <section className="bg-gradient-to-b from-slate-900 to-slate-700 px-6 py-24 text-center text-white">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            {brief.businessName}
-          </h1>
-          {tagline && (
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-200">
-              {tagline}
-            </p>
+        <section
+          className="px-6 py-24 text-center text-white"
+          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+        >
+          {brief.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brief.logoUrl} alt={brief.businessName} className="mx-auto mb-6 h-16 w-auto" />
           )}
-          <a
-            href={`mailto:hello@${cleanDomain(brief.domain)}`}
-            className="mt-8 inline-block rounded-lg bg-white px-6 py-3 font-semibold text-slate-900"
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{brief.businessName}</h1>
+          {tagline && <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90">{tagline}</p>}
+          <span
+            className="mt-8 inline-block rounded-lg bg-white px-6 py-3 font-semibold"
+            style={{ color: primary }}
           >
             Get in touch
-          </a>
+          </span>
         </section>
 
         {/* About */}
         <section className="mx-auto max-w-3xl px-6 py-20">
-          <h2 className="text-2xl font-bold">About us</h2>
-          <p className="mt-4 whitespace-pre-line text-slate-600">
-            {brief.description}
-          </p>
+          <h2 className="text-2xl font-bold" style={{ color: primary }}>About us</h2>
+          <p className="mt-4 whitespace-pre-line text-slate-600">{brief.description}</p>
         </section>
 
+        {/* Image gallery */}
+        {images.length > 0 && (
+          <section className="bg-slate-50 px-6 py-16">
+            <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {images.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={i} src={src} alt="" className="h-56 w-full rounded-xl object-cover" />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Services */}
-        <section className="bg-slate-50 px-6 py-20">
+        <section className="px-6 py-20">
           <div className="mx-auto max-w-5xl">
-            <h2 className="text-center text-2xl font-bold">What we offer</h2>
+            <h2 className="text-center text-2xl font-bold" style={{ color: primary }}>
+              What we offer
+            </h2>
             <div className="mt-10 grid gap-6 sm:grid-cols-3">
               {services.map((s, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 text-center"
-                >
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-white">
+                <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
+                  <div
+                    className="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white"
+                    style={{ background: accent }}
+                  >
                     {i + 1}
                   </div>
                   <p className="mt-4 font-medium">{s}</p>
@@ -94,15 +124,23 @@ export default async function PreviewPage({
 
         {/* Contact */}
         <section className="px-6 py-20 text-center">
-          <h2 className="text-2xl font-bold">Contact {brief.businessName}</h2>
-          <p className="mt-3 text-slate-600">
-            {cleanDomain(brief.domain)}
-          </p>
+          <h2 className="text-2xl font-bold" style={{ color: primary }}>
+            Contact {brief.businessName}
+          </h2>
+          {brief.domain ? (
+            <p className="mt-3 text-slate-600">{cleanDomain(brief.domain)}</p>
+          ) : (
+            <p className="mt-3 text-slate-500">
+              Get your domain with{" "}
+              <Link href="/domains" className="font-semibold" style={{ color: accent }}>
+                GenX Digital
+              </Link>
+            </p>
+          )}
         </section>
 
         <footer className="border-t border-slate-200 px-6 py-8 text-center text-sm text-slate-400">
-          © {new Date().getFullYear()} {brief.businessName} ·{" "}
-          {cleanDomain(brief.domain)}
+          © {new Date().getFullYear()} {brief.businessName}
         </footer>
       </div>
     </div>
@@ -115,8 +153,6 @@ function firstSentence(text: string): string {
 }
 
 function deriveServices(description: string): string[] {
-  // Lightweight heuristic for the simple template — three generic value props
-  // a business can edit later. The full AI version will tailor these.
   const generic = ["Quality you can trust", "Friendly local service", "Great value"];
   const words = description
     .split(/[,.\n]/)
